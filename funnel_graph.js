@@ -1,157 +1,54 @@
-// Add this line to include Looker's visualization API
+// Looker visualization API
 looker.plugins.visualizations.add({
   id: "funnel_graph",
   label: "Funnel Graph",
-  options: {},
+  options: {
+    color1: {
+      type: "string",
+      label: "Color 1",
+      display: "color",
+      default: "#FFB178"
+    },
+    color2: {
+      type: "string",
+      label: "Color 2",
+      display: "color",
+      default: "#FF3C8E"
+    }
+  },
   create: function(element, config) {
     element.innerHTML = `
-      <div class="flex">
-        <div class="funnel"></div>
-      </div>
-      <div class="method-buttons">
-        <button id="makeVertical">Make Vertical</button>
-        <button id="makeHorizontal">Make Horizontal</button>
-        <button id="toggleDirection">Toggle Direction</button>
-        <button id="gradientMakeVertical">Gradient Make Vertical</button>
-        <button id="gradientMakeHorizontal">Gradient Make Horizontal</button>
-        <button id="gradientToggleDirection">Gradient Toggle Direction</button>
-        <button id="useData1">Use DataSet 1</button>
-        <button id="useData2">Use DataSet 2</button>
-        <button id="useData3">Use DataSet 3</button>
-      </div>
-      <style>
-        html, body {
-            min-height: 100%;
-        }
-        body {
-            margin: 0;
-            background: #393862;
-        }
-        .funnel {
-            margin: 24px auto;
-        }
-        .flex {
-            display: flex;
-        }
-        .method-buttons {
-            display: flex;
-            justify-content: center;
-            margin-top: 48px;
-        }
-        button {
-            margin-left: 8px;
-            margin-right: 8px;
-        }
-      </style>
+      <div class="funnel-container" style="width: 100%; height: 100%;"></div>
     `;
-
-    // Add the external CSS files
-    const link1 = document.createElement('link');
-    link1.rel = 'stylesheet';
-    link1.type = 'text/css';
-    link1.href = 'https://unpkg.com/funnel-graph-js@1.3.9/dist/css/main.min.css';
-    document.head.appendChild(link1);
-
-    const link2 = document.createElement('link');
-    link2.rel = 'stylesheet';
-    link2.type = 'text/css';
-    link2.href = 'https://unpkg.com/funnel-graph-js@1.3.9/dist/css/theme.min.css';
-    document.head.appendChild(link2);
-
-    // Add the external JS file
-    const script = document.createElement('script');
-    script.src = 'https://unpkg.com/funnel-graph-js@1.3.9/dist/js/funnel-graph.min.js';
-    script.onload = () => this.updateViz();
-    document.body.appendChild(script);
+    this._container = element.querySelector('.funnel-container');
   },
-
   update: function(data, element, config, queryResponse) {
-    this.updateViz();
-  },
+    if (!data.length) {
+      this.addError({ title: "No data." });
+      return;
+    }
 
-  updateViz: function() {
-    if (typeof FunnelGraph === "undefined") return;
+    // Parse the data from Looker into the format needed for funnel-graph-js
+    const labels = data.map(row => row['label_dimension'].value);
+    const values = data.map(row => row['value_measure'].value);
 
-    var dataExample1 = {
-      colors: ['#FFB178', '#FF3C8E'],
-      values: [11000, 3000, 240]
+    const graphData = {
+      labels: labels,
+      colors: [config.color1, config.color2],
+      values: values
     };
 
-    var dataExample2 = {
-      labels: ['Impressions 2', 'Add To Cart 2', 'Buy 2'],
-      colors: ['#FFB178', '#FF3C8E'],
-      values: [12000, 5700, 360]
-    };
-
-    var dataExample3 = {
-      labels: ['Impressions', 'Add To Cart', 'Buy'],
-      subLabels: ['Direct', 'Social Media', 'Ads'],
-      colors: [
-        ['#FFB178', '#FF78B1', '#FF3C8E'],
-        ['#A0BBFF', '#EC77FF'],
-        ['#A0F9FF', '#7795FF']
-      ],
-      values: [
-        [3500, 2500, 6500],
-        [3300, 1400, 1000],
-        [600, 200, 130]
-      ],
-    };
-
-    var graph = new FunnelGraph({
-      container: '.funnel',
+    // Create the funnel graph
+    const graph = new FunnelGraph({
+      container: this._container,
       gradientDirection: 'horizontal',
-      data: dataExample3,
+      data: graphData,
       displayPercent: true,
       direction: 'horizontal',
-      width: 800,
-      height: 300,
-      subLabelValue: 'raw'
+      width: element.clientWidth,
+      height: element.clientHeight
     });
 
     graph.draw();
-
-    // direction methods
-    document.querySelector('#makeVertical').addEventListener('click', function () {
-      graph.setWidth(300);
-      graph.setHeight(400);
-      graph.makeVertical();
-    });
-
-    document.querySelector('#makeHorizontal').addEventListener('click', function () {
-      graph.setWidth(800);
-      graph.setHeight(300);
-      graph.makeHorizontal();
-    });
-
-    document.querySelector('#toggleDirection').addEventListener('click', function () {
-      graph.direction === 'horizontal' ? document.querySelector('#makeVertical').click() :
-        document.querySelector('#makeHorizontal').click();
-    });
-
-    // gradient methods
-    document.querySelector('#gradientMakeVertical').addEventListener('click', function () {
-      graph.gradientMakeVertical();
-    });
-
-    document.querySelector('#gradientMakeHorizontal').addEventListener('click', function () {
-      graph.gradientMakeHorizontal();
-    });
-
-    document.querySelector('#gradientToggleDirection').addEventListener('click', function () {
-      graph.gradientToggleDirection();
-    });
-
-    document.querySelector('#useData1').addEventListener('click', function () {
-      graph.updateData(dataExample1);
-    });
-
-    document.querySelector('#useData2').addEventListener('click', function () {
-      graph.updateData(dataExample2);
-    });
-
-    document.querySelector('#useData3').addEventListener('click', function () {
-      graph.updateData(dataExample3);
-    });
   }
 });
