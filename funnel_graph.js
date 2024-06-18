@@ -5,7 +5,9 @@ looker.plugins.visualizations.add({
   options: {},
   create: function(element, config) {
     element.innerHTML = `
-      <div class="funnel"></div>
+      <div class="flex">
+        <div class="funnel"></div>
+      </div>
       <div class="method-buttons">
         <button id="makeVertical">Make Vertical</button>
         <button id="makeHorizontal">Make Horizontal</button>
@@ -17,24 +19,48 @@ looker.plugins.visualizations.add({
         <button id="useData2">Use DataSet 2</button>
         <button id="useData3">Use DataSet 3</button>
       </div>
+      <style>
+        html, body {
+            min-height: 100%;
+        }
+        body {
+            margin: 0;
+            background: #393862;
+        }
+        .funnel {
+            margin: 24px auto;
+        }
+        .flex {
+            display: flex;
+        }
+        .method-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 48px;
+        }
+        button {
+            margin-left: 8px;
+            margin-right: 8px;
+        }
+      </style>
     `;
 
     // Add the external CSS files
     const link1 = document.createElement('link');
     link1.rel = 'stylesheet';
     link1.type = 'text/css';
-    link1.href = 'https://rawcdn.githack.com/greghub/funnel-graph-js/d8537ef1f26850d8db157fe972af3c04f3a3c9d1/dist/css/main.css';
+    link1.href = 'https://unpkg.com/funnel-graph-js@1.3.9/dist/css/main.min.css';
     document.head.appendChild(link1);
 
     const link2 = document.createElement('link');
     link2.rel = 'stylesheet';
     link2.type = 'text/css';
-    link2.href = 'https://rawcdn.githack.com/greghub/funnel-graph-js/d8537ef1f26850d8db157fe972af3c04f3a3c9d1/dist/css/theme.min.css';
+    link2.href = 'https://unpkg.com/funnel-graph-js@1.3.9/dist/css/theme.min.css';
     document.head.appendChild(link2);
 
     // Add the external JS file
     const script = document.createElement('script');
-    script.src = 'https://rawcdn.githack.com/greghub/funnel-graph-js/d8537ef1f26850d8db157fe972af3c04f3a3c9d1/dist/js/funnel-graph.js';
+    script.src = 'https://unpkg.com/funnel-graph-js@1.3.9/dist/js/funnel-graph.min.js';
     script.onload = () => this.updateViz();
     document.body.appendChild(script);
   },
