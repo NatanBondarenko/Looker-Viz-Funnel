@@ -29,14 +29,18 @@ looker.plugins.visualizations.add({
     }
 
     // Parse the data from Looker into the format needed for funnel-graph-js
-    const labels = data.map(row => row['label_dimension'].value);
-    const values = data.map(row => row['value_measure'].value);
+    const labels = queryResponse.fields.dimensions.map(dim => dim.label_short);
+    const values = data.map(row => row[queryResponse.fields.dimensions[0].name].value);
+    const colors = [config.color1, config.color2];
 
     const graphData = {
       labels: labels,
-      colors: [config.color1, config.color2],
+      colors: colors,
       values: values
     };
+
+    // Clear the previous graph
+    this._container.innerHTML = "";
 
     // Create the funnel graph
     const graph = new FunnelGraph({
