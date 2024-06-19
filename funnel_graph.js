@@ -1,6 +1,6 @@
 looker.plugins.visualizations.add({
-  id: "vue_funnel_graph",
-  label: "Vue Funnel Graph",
+  id: "funnel_graph",
+  label: "Funnel Graph",
   options: {
     colors: {
       type: "array",
@@ -10,22 +10,7 @@ looker.plugins.visualizations.add({
     }
   },
   create: function(element, config) {
-    element.innerHTML = `
-      <div id="app">
-        <funnel-graph :data="data" :colors="colors" :labels="labels"></funnel-graph>
-      </div>
-    `;
-
-    var vueApp = new Vue({
-      el: '#app',
-      data: {
-        data: [],
-        colors: [],
-        labels: []
-      }
-    });
-
-    this.vueApp = vueApp;
+    element.innerHTML = '<div id="funnel-graph"></div>';
   },
   updateAsync: function(data, element, config, queryResponse, details, done) {
     if (!queryResponse.fields.dimensions || !queryResponse.fields.dimensions.length) {
@@ -33,16 +18,29 @@ looker.plugins.visualizations.add({
       return;
     }
 
-    const dimensions = queryResponse.fields.dimensions.map(d => d.name);
-    const labels = data.map(row => row[dimensions[0]] ? row[dimensions[0]].value : 'Unknown');
-    const values = data.map(row => row[dimensions[1]] ? row[dimensions[1]].value : 0);
+    const dimension = queryResponse.fields.dimensions[0].name;
+    const measure = queryResponse.fields.measures[0].name;
 
-    this.vueApp.data = [{
-      label: 'Funnel',
-      values: values
-    }];
-    this.vueApp.colors = config.colors || ["#FF6384", "#36A2EB", "#FFCE56"];
-    this.vueApp.labels = labels;
+    const labels = data.map(row => row[dimension].value);
+    const values = data.map(row => row[measure].value);
+
+    const colors = config.colors && config.colors.length ? config.colors : ["#FF6384", "#36A2EB", "#FFCE56"];
+
+    const funnelData = {
+      labels: labels,
+      subLabels: [],
+      colors: [colors],
+      values: [values]
+    };
+
+    const graph = new FunnelGraph({
+      container: '#funnel-graph',
+      gradientDirection: 'horizontal',
+      data: funnelData,
+      displayPercent: true
+    });
+
+    graph.draw();
 
     done();
   }
