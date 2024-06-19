@@ -23,14 +23,26 @@ looker.plugins.visualizations.add({
     this._container = element.querySelector('.funnel-container');
   },
   update: function(data, element, config, queryResponse) {
+    console.log('Received data:', data);
+    console.log('Query response:', queryResponse);
+
     if (!data.length) {
       this.addError({ title: "No data." });
       return;
     }
 
+    // Ensure there are dimensions to work with
+    if (!queryResponse.fields.dimensions.length) {
+      this.addError({ title: "No dimensions." });
+      return;
+    }
+
     // Parse the data from Looker into the format needed for funnel-graph-js
     const labels = queryResponse.fields.dimensions.map(dim => dim.label_short);
-    const values = data.map(row => row[queryResponse.fields.dimensions[0].name].value);
+    const values = data.map(row => {
+      const dimName = queryResponse.fields.dimensions[0].name;
+      return row[dimName] && row[dimName].value ? row[dimName].value : 0;
+    });
     const colors = [config.color1, config.color2];
 
     const graphData = {
@@ -38,6 +50,8 @@ looker.plugins.visualizations.add({
       colors: colors,
       values: values
     };
+
+    console.log('Parsed graph data:', graphData);
 
     // Clear the previous graph
     this._container.innerHTML = "";
