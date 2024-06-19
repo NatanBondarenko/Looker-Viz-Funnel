@@ -1,7 +1,8 @@
-// Ensure to include the funnel-graph-js library in your HTML or project
-// <script src="https://cdn.jsdelivr.net/npm/funnel-graph-js"></script>
+// Make sure the funnel-graph-js library is included
+// <script src="https://unpkg.com/funnel-graph-js@1.3.9/dist/js/funnel-graph.min.js"></script>
+// <link rel="stylesheet" href="https://unpkg.com/funnel-graph-js@1.3.9/dist/css/theme.min.css" />
+// <link rel="stylesheet" href="https://unpkg.com/funnel-graph-js@1.3.9/dist/css/main.min.css" />
 
-// Looker visualization API
 looker.plugins.visualizations.add({
   id: "funnel_graph",
   label: "Funnel Graph",
@@ -28,7 +29,7 @@ looker.plugins.visualizations.add({
   update: function(data, element, config, queryResponse) {
     // Clear any previous errors
     this.clearErrors();
-    
+
     // Check if data is available
     if (!data.length) {
       this.addError({ title: "No data." });
@@ -53,17 +54,27 @@ looker.plugins.visualizations.add({
     // Clear the container before drawing a new graph
     this._container.innerHTML = '';
 
-    // Create the funnel graph
-    const graph = new FunnelGraph({
-      container: this._container,
-      gradientDirection: 'horizontal',
-      data: graphData,
-      displayPercent: true,
-      direction: 'horizontal',
-      width: element.clientWidth,
-      height: element.clientHeight
-    });
+    // Check if FunnelGraph is loaded
+    if (typeof FunnelGraph !== 'function') {
+      this.addError({ title: "Library Error", message: "FunnelGraph library is not loaded." });
+      return;
+    }
 
-    graph.draw();
+    try {
+      // Create the funnel graph
+      const graph = new FunnelGraph({
+        container: this._container,
+        gradientDirection: 'horizontal',
+        data: graphData,
+        displayPercent: true,
+        direction: 'horizontal',
+        width: element.clientWidth,
+        height: element.clientHeight
+      });
+
+      graph.draw();
+    } catch (error) {
+      this.addError({ title: "Rendering Error", message: error.message });
+    }
   }
 });
