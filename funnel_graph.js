@@ -1,4 +1,3 @@
-// Define the Looker custom visualization
 looker.plugins.visualizations.add({
   id: 'recruitment_funnel_viz',
   label: 'Recruitment Funnel',
@@ -13,12 +12,12 @@ looker.plugins.visualizations.add({
     // Clear previous content
     element.innerHTML = '';
 
-    // Extract data from Looker queryResponse
-    const rows = queryResponse.data;
+    // Extract measures from Looker queryResponse
+    const measureData = queryResponse.data;
 
-    // Prepare data for visualization (assuming 'stage' and 'count' fields)
-    const chartData = rows.map(row => ({
-      stage: row['recruitment_funnel.stage'].value,
+    // Prepare data for visualization
+    const chartData = measureData.map(row => ({
+      stage: row['recruitment_funnel.count'].value, // Assuming 'count' is the measure name
       count: row['count'].value,
     }));
 
