@@ -23,36 +23,20 @@ looker.plugins.visualizations.add({
     this._container = element.querySelector('.funnel-container');
   },
   update: function(data, element, config, queryResponse) {
-    console.log('Received data:', data);
-    console.log('Query response:', queryResponse);
-
     if (!data.length) {
       this.addError({ title: "No data." });
       return;
     }
 
-    if (!queryResponse.fields.dimensions.length) {
-      this.addError({ title: "No dimensions." });
-      return;
-    }
-
-    // Assuming we are working with the first dimension for labels
-    const labels = data.map(row => row[queryResponse.fields.dimensions[0].name].value);
-    // Assuming we are working with the first measure for values
-    const values = data.map(row => row[queryResponse.fields.measures[0].name].value);
-
-    const colors = [config.color1, config.color2];
+    // Parse the data from Looker into the format needed for funnel-graph-js
+    const labels = data.map(row => row['label_dimension'].value);
+    const values = data.map(row => row['value_measure'].value);
 
     const graphData = {
       labels: labels,
-      colors: colors,
+      colors: [config.color1, config.color2],
       values: values
     };
-
-    console.log('Parsed graph data:', graphData);
-
-    // Clear the previous graph
-    this._container.innerHTML = "";
 
     // Create the funnel graph
     const graph = new FunnelGraph({
