@@ -1,6 +1,3 @@
-// Ensure to include the funnel-graph-js library in your HTML or project
-// <script src="https://cdn.jsdelivr.net/npm/funnel-graph-js"></script>
-
 // Looker visualization API
 looker.plugins.visualizations.add({
   id: "funnel_graph",
@@ -45,9 +42,9 @@ looker.plugins.visualizations.add({
     }
 
     const graphData = {
-      labels: labels,
+      labels: labels.filter(label => label !== undefined),
       colors: [config.color1, config.color2],
-      values: values
+      values: values.filter(value => value !== undefined)
     };
 
     // Clear the container before drawing a new graph
