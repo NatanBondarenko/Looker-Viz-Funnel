@@ -1,66 +1,49 @@
-// Looker visualization API
 looker.plugins.visualizations.add({
-  id: "funnel_graph",
-  label: "Funnel Graph",
+  id: "vue_funnel_graph",
+  label: "Vue Funnel Graph",
   options: {
-    color1: {
-      type: "string",
-      label: "Color 1",
-      display: "color",
-      default: "#FFB178"
-    },
-    color2: {
-      type: "string",
-      label: "Color 2",
-      display: "color",
-      default: "#FF3C8E"
+    colors: {
+      type: "array",
+      label: "Colors",
+      section: "Style",
+      placeholder: "#FF6384, #36A2EB, #FFCE56"
     }
   },
   create: function(element, config) {
     element.innerHTML = `
-      <div class="funnel-container" style="width: 100%; height: 100%;"></div>
+      <div id="app">
+        <funnel-graph :data="data" :colors="colors" :labels="labels"></funnel-graph>
+      </div>
     `;
-    this._container = element.querySelector('.funnel-container');
-  },
-  update: function(data, element, config, queryResponse) {
-    // Clear any previous errors
-    this.clearErrors();
-    
-    // Check if data is available
-    if (!data.length) {
-      this.addError({ title: "No data." });
-      return;
-    }
 
-    // Parse the data from Looker into the format needed for funnel-graph-js
-    const labels = data.map(row => row['label_dimension'] && row['label_dimension'].value);
-    const values = data.map(row => row['value_measure'] && row['value_measure'].value);
-
-    if (labels.includes(undefined) || values.includes(undefined)) {
-      this.addError({ title: "Data format error.", message: "Ensure 'label_dimension' and 'value_measure' fields exist in the data." });
-      return;
-    }
-
-    const graphData = {
-      labels: labels.filter(label => label !== undefined),
-      colors: [config.color1, config.color2],
-      values: values.filter(value => value !== undefined)
-    };
-
-    // Clear the container before drawing a new graph
-    this._container.innerHTML = '';
-
-    // Create the funnel graph
-    const graph = new FunnelGraph({
-      container: this._container,
-      gradientDirection: 'horizontal',
-      data: graphData,
-      displayPercent: true,
-      direction: 'horizontal',
-      width: element.clientWidth,
-      height: element.clientHeight
+    var vueApp = new Vue({
+      el: '#app',
+      data: {
+        data: [],
+        colors: [],
+        labels: []
+      }
     });
 
-    graph.draw();
+    this.vueApp = vueApp;
+  },
+  updateAsync: function(data, element, config, queryResponse, details, done) {
+    if (!queryResponse.fields.dimensions || !queryResponse.fields.dimensions.length) {
+      this.addError({title: "No Dimensions", message: "This chart requires dimensions."});
+      return;
+    }
+
+    const dimensions = queryResponse.fields.dimensions.map(d => d.name);
+    const labels = data.map(row => row[dimensions[0]].value);
+    const values = data.map(row => row[dimensions[1]].value);
+
+    this.vueApp.data = [{
+      label: 'Funnel',
+      values: values
+    }];
+    this.vueApp.colors = config.colors || ["#FF6384", "#36A2EB", "#FFCE56"];
+    this.vueApp.labels = labels;
+
+    done();
   }
 });
