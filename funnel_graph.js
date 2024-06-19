@@ -34,8 +34,8 @@ looker.plugins.visualizations.add({
     }
 
     const dimensions = queryResponse.fields.dimensions.map(d => d.name);
-    const labels = data.map(row => row[dimensions[0]].value);
-    const values = data.map(row => row[dimensions[1]].value);
+    const labels = data.map(row => row[dimensions[0]] ? row[dimensions[0]].value : 'Unknown');
+    const values = data.map(row => row[dimensions[1]] ? row[dimensions[1]].value : 0);
 
     this.vueApp.data = [{
       label: 'Funnel',
