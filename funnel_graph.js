@@ -1,68 +1,72 @@
-// Dynamically load external libraries
-function loadScript(src, callback) {
-  var script = document.createElement('script');
-  script.src = src;
-  script.onload = callback;
-  document.head.appendChild(script);
-}
+// Define the Looker custom visualization
+looker.plugins.visualizations.add({
+  id: 'recruitment_funnel_viz',
+  label: 'Recruitment Funnel',
+  options: {
+    // Define options schema if needed
+  },
+  create: function(element, config) {
+    // Initialize your visualization
+    element.innerHTML = '<div id="chart-container"></div>';
+  },
+  update: function(data, element, config, queryResponse) {
+    // Clear previous content
+    element.innerHTML = '';
 
-function loadCSS(href) {
-  var link = document.createElement('link');
-  link.rel = 'stylesheet';
-  link.href = href;
-  document.head.appendChild(link);
-}
+    // Extract data from Looker queryResponse
+    const rows = queryResponse.data;
 
-// Load the required libraries
-loadCSS('https://cdn.jsdelivr.net/npm/funnel-graph-js@1.0.10/dist/funnel-graph.min.css');
-loadScript('https://cdn.jsdelivr.net/npm/vue-funnel-graph-js/dist/vue-funnel-graph.min.js', function() {
+    // Prepare data for visualization (assuming 'stage' and 'count' fields)
+    const chartData = rows.map(row => ({
+      stage: row['recruitment_funnel.stage'].value,
+      count: row['count'].value,
+    }));
 
-  looker.plugins.visualizations.add({
-    id: "funnel_graph",
-    label: "Funnel Graph",
-    options: {
-      colors: {
-        type: "array",
-        label: "Colors",
-        section: "Style",
-        placeholder: "#FF6384, #36A2EB, #FFCE56"
-      }
-    },
-    create: function(element, config) {
-      element.innerHTML = '<div id="funnel-graph"></div>';
-    },
-    updateAsync: function(data, element, config, queryResponse, details, done) {
-      if (!queryResponse.fields.dimensions || !queryResponse.fields.dimensions.length) {
-        this.addError({title: "No Dimensions", message: "This chart requires dimensions."});
-        return;
-      }
+    // Render the chart using a library like ApexCharts, Chart.js, etc.
+    const chartContainer = element.appendChild(document.createElement('div'));
+    chartContainer.id = 'chart-container';
 
-      const dimension = queryResponse.fields.dimensions[0].name;
-      const measure = queryResponse.fields.measures[0].name;
+    // Example using ApexCharts
+    const options = {
+      series: [{
+        name: 'Funnel Series',
+        data: chartData.map(item => item.count)
+      }],
+      chart: {
+        type: 'bar',
+        height: 350,
+      },
+      plotOptions: {
+        bar: {
+          horizontal: true,
+          barHeight: '80%',
+          borderRadius: 0,
+          isFunnel: true,
+        },
+      },
+      dataLabels: {
+        enabled: true,
+        formatter: function(val, opt) {
+          return opt.w.globals.labels[opt.dataPointIndex] + ':  ' + val;
+        },
+        dropShadow: {
+          enabled: true,
+        },
+      },
+      xaxis: {
+        categories: chartData.map(item => item.stage),
+      },
+      title: {
+        text: 'Recruitment Funnel',
+        align: 'middle',
+      },
+      legend: {
+        show: false,
+      },
+    };
 
-      const labels = data.map(row => row[dimension].value);
-      const values = data.map(row => row[measure].value);
-
-      const colors = config.colors && config.colors.length ? config.colors : ["#FF6384", "#36A2EB", "#FFCE56"];
-
-      const funnelData = {
-        labels: labels,
-        subLabels: [],
-        colors: [colors],
-        values: [values]
-      };
-
-      const graph = new FunnelGraph({
-        container: '#funnel-graph',
-        gradientDirection: 'horizontal',
-        data: funnelData,
-        displayPercent: true
-      });
-
-      graph.draw();
-
-      done();
-    }
-  });
-
+    // Render the chart using ApexCharts
+    const chart = new ApexCharts(chartContainer, options);
+    chart.render();
+  }
 });
